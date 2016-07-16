@@ -6719,7 +6719,7 @@ int perturb_derivs(double tau,
   struct background * pba;
   struct thermo * pth;
   struct perturbs * ppt;
-  
+
   struct perturb_workspace * ppw;
   double * pvecback;
   double * pvecthermo;
@@ -7388,7 +7388,7 @@ int perturb_derivs(double tau,
             /** - -----> ncdm velocity for given momentum bin */
 
             dy[idx+1] = qk_div_epsilon/3.0*(y[idx] - 2*s_l[2]*y[idx+2])
-              -epsilon*metric_euler/(3*q*k)*dlnf0_dlnq;
+              -epsilon*metric_euler/(3*q*k)*dlnf0_dlnq
               -40./3.*param*q*T_v4*y[idx+1];
 
             /** - -----> ncdm shear for given momentum bin */
