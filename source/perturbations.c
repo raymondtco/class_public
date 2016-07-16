@@ -7367,7 +7367,7 @@ int perturb_derivs(double tau,
         /** - -----> loop over species */
         /*printf("Loopin'\n");*/
         for (n_ncdm=0; n_ncdm<pv->N_ncdm; n_ncdm++) {
-          T_v = 0.71611; /*stod(pba->T_ncdm);*/
+          T_v = pba->T_ncdm[n_ncdm]; /*stod(pba->T_ncdm);*/
           T_v4 = T_v*T_v*T_v*T_v;
           /** - -----> loop over momentum */
 
