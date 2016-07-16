@@ -6719,13 +6719,14 @@ int perturb_derivs(double tau,
   struct background * pba;
   struct thermo * pth;
   struct perturbs * ppt;
+  
   struct perturb_workspace * ppw;
   double * pvecback;
   double * pvecthermo;
   double * pvecmetric;
   double * s_l;
   struct perturb_vector * pv;
-
+  double T_v,T_v4,param; /*BEN FLAG*/
   /* short-cut notations for the perturbations */
   double delta_g=0.,theta_g=0.,shear_g=0.;
   double delta_b,theta_b;
@@ -7361,18 +7362,19 @@ int perturb_derivs(double tau,
 
       /** - ----> second case: use exact equation (Boltzmann hierarchy on momentum grid) */
 
-      else {
+     else {
 
         /** - -----> loop over species */
-
+        /*printf("Loopin'\n");*/
         for (n_ncdm=0; n_ncdm<pv->N_ncdm; n_ncdm++) {
-
+          T_v = 0.71611; /*stod(pba->T_ncdm);*/
+          T_v4 = T_v*T_v*T_v*T_v;
           /** - -----> loop over momentum */
 
           for (index_q=0; index_q < pv->q_size_ncdm[n_ncdm]; index_q++) {
 
             /** - -----> define intermediate quantities */
-
+            param = 0.001;/*0.001;*/
             dlnf0_dlnq = pba->dlnf0_dlnq_ncdm[n_ncdm][index_q];
             q = pba->q_ncdm[n_ncdm][index_q];
             epsilon = sqrt(q*q+a2*pba->M_ncdm[n_ncdm]*pba->M_ncdm[n_ncdm]);
@@ -7381,21 +7383,25 @@ int perturb_derivs(double tau,
             /** - -----> ncdm density for given momentum bin */
 
             dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.;
+              -40./3.*param*q*T_v4*y[idx]; /*BEN FLAG */
 
             /** - -----> ncdm velocity for given momentum bin */
 
             dy[idx+1] = qk_div_epsilon/3.0*(y[idx] - 2*s_l[2]*y[idx+2])
               -epsilon*metric_euler/(3*q*k)*dlnf0_dlnq;
+              -40./3.*param*q*T_v4*y[idx+1];
 
             /** - -----> ncdm shear for given momentum bin */
 
             dy[idx+2] = qk_div_epsilon/5.0*(2*s_l[2]*y[idx+1]-3.*s_l[3]*y[idx+3])
-              -s_l[2]*metric_shear*2./15.*dlnf0_dlnq;
+              -s_l[2]*metric_shear*2./15.*dlnf0_dlnq
+              -40./3.*param*q*T_v4*y[idx+2];
 
             /** - -----> ncdm l>3 for given momentum bin */
 
             for(l=3; l<pv->l_max_ncdm[n_ncdm]; l++){
-              dy[idx+l] = qk_div_epsilon/(2.*l+1.0)*(l*s_l[l]*y[idx+(l-1)]-(l+1.)*s_l[l+1]*y[idx+(l+1)]);
+              dy[idx+l] = qk_div_epsilon/(2.*l+1.0)*(l*s_l[l]*y[idx+(l-1)]-(l+1.)*s_l[l+1]*y[idx+(l+1)])
+              -40./3.*param*q*T_v4*y[idx+l];
             }
 
             /** - -----> ncdm lmax for given momentum bin (truncation as in Ma and Bertschinger)
