@@ -263,7 +263,7 @@ int background_functions(
   /* scale factor relative to scale factor today */
   double a_rel;
   /* background ncdm quantities */
-  double rho_ncdm,p_ncdm,pseudo_p_ncdm;
+  double rho_ncdm,p_ncdm,pseudo_p_ncdm,sig_ncdm;
   /* index for n_ncdm species */
   int n_ncdm;
   /* scale factor */
@@ -459,7 +459,7 @@ int background_init(
 
   /** - define local variables */
   int n_ncdm;
-  double rho_ncdm_rel,rho_nu_rel;
+  double rho_ncdm_rel,rho_nu_rel,sig_ncdm;
   double Neff;
   int filenum=0;
 
@@ -646,6 +646,7 @@ int background_free_input(
     free(pba->q_size_ncdm_bg);
     free(pba->M_ncdm);
     free(pba->T_ncdm);
+    //free(pba->sig_ncdm);
     free(pba->ksi_ncdm);
     free(pba->deg_ncdm);
     free(pba->Omega0_ncdm);

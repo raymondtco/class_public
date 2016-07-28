@@ -2965,7 +2965,7 @@ int perturb_vector_init(
 
   int index_pt;
   int l;
-  int n_ncdm,index_q,ncdm_l_size;
+  int n_ncdm,index_q,index_qp,ncdm_l_size;
   double rho_plus_p_ncdm,q,q2,epsilon,a,factor;
 
   /** - allocate a new perturb_vector structure to which ppw-->pv will point at the end of the routine */
@@ -7363,7 +7363,7 @@ int perturb_derivs(double tau,
       /** - ----> second case: use exact equation (Boltzmann hierarchy on momentum grid) */
 
      else {
-
+      param = pba->sig_ncdm;/*0.001;*/
         /** - -----> loop over species */
         /*printf("Loopin'\n");*/
         for (n_ncdm=0; n_ncdm<pv->N_ncdm; n_ncdm++) {
@@ -7374,7 +7374,6 @@ int perturb_derivs(double tau,
           for (index_q=0; index_q < pv->q_size_ncdm[n_ncdm]; index_q++) {
 
             /** - -----> define intermediate quantities */
-            param = 0.001;/*0.001;*/
             dlnf0_dlnq = pba->dlnf0_dlnq_ncdm[n_ncdm][index_q];
             q = pba->q_ncdm[n_ncdm][index_q];
             epsilon = sqrt(q*q+a2*pba->M_ncdm[n_ncdm]*pba->M_ncdm[n_ncdm]);
