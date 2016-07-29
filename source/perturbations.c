@@ -7381,7 +7381,7 @@ int perturb_derivs(double tau,
 
             /** - -----> ncdm density for given momentum bin */
 
-            dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.;
+            dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.
               -40./3.*param*q*T_v4*y[idx]; /*BEN FLAG */
 
             /** - -----> ncdm velocity for given momentum bin */
