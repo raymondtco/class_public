@@ -7441,7 +7441,7 @@ int perturb_derivs(double tau,
             i1_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
-              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(qp-ksi)+1.) +1./(exp(qp+ksi)+1.));
               i1_ncdm += qp/q * (K_m_l(q,qp,pba, 0) - 20./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
               //printf("q = %E, qp = %E, l=0, KM = %E \n",  q,qp, K_m_l(q,qp,pba, 0));
             }
@@ -7454,7 +7454,7 @@ int perturb_derivs(double tau,
             i2_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
-              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(qp-ksi)+1.) +1./(exp(qp+ksi)+1.));
               i2_ncdm += qp/q * (K_m_l(q,qp,pba, 1) + 10./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
@@ -7469,7 +7469,7 @@ int perturb_derivs(double tau,
             i3_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
-              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(qp-ksi)+1.) +1./(exp(qp+ksi)+1.));
               i2_ncdm += qp/q * (K_m_l(q,qp,pba, 2) - 2./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
@@ -7486,7 +7486,7 @@ int perturb_derivs(double tau,
               i4_ncdm = 0.;
               for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
                 qp = pba->q_ncdm[n_ncdm][index_qp];
-                f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+                f0p = 1.0/pow(2*_PI_,3)*(1./(exp(qp-ksi)+1.) +1./(exp(qp+ksi)+1.));
                 i4_ncdm += qp/q * (K_m_l(q,qp,pba, l))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
               }
