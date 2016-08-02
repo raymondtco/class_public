@@ -26,6 +26,16 @@
 
 //@{
 
+
+  double P_l(double x,int lmax);
+
+  double K_m_l(
+                                double q,
+                                double qp,
+                                struct background * pba,
+                                int l);
+  
+
 enum tca_flags {tca_on, tca_off};
 enum rsa_flags {rsa_off, rsa_on};
 enum ufa_flags {ufa_off, ufa_on};
@@ -571,6 +581,7 @@ struct perturb_parameters_and_workspace {
 extern "C" {
 #endif
 
+
   int perturb_sources_at_tau(
                              struct perturbs * ppt,
                              int index_md,
@@ -788,7 +799,15 @@ extern "C" {
 
   int perturb_prepare_output(struct background * pba,
                              struct perturbs * ppt);
+  
+  double K_m(
+                                double q,
+                                double qp,
+                                struct background * pba,
+                                int l
+                                );
 
+  double trap_int(double func(double), double a, double b, int n);
 #ifdef __cplusplus
 }
 #endif

@@ -42,6 +42,56 @@
  * @return the error status
  */
 
+ double P_l(double x,int lmax){
+  //double pl;
+  double p[lmax+2];
+  int l;
+
+  p[0] = 1.;
+  p[1] = x;
+  for (l = 1; l < lmax; ++l)
+  {
+    p[l+1] = ((2.*l+1.)*x*p[l]-l*p[l-1])/(l+1.);
+  }
+ //printf("cost = %E, l = %i, Pl = %E\n", x, lmax, p[lmax]);
+  return p[lmax];
+}
+
+double K_m_l(
+                                double q,
+                                double qp,
+                                struct background * pba,
+                                int l
+                                ) {
+  /* - define local variables */
+  double Qp, Qm, P, k_m,x1,x2;
+  double Tv0 = 1.95; //1.34754*pow(10,25); 
+  double cost;
+  int i;
+  int n=200;
+  double integrand = 0.0;
+  int lm = l;
+  double dx = (0.99999 - (-0.99999)) / (n - 1.); 
+
+  Qp = q + qp;
+  Qm = q - qp;
+  //printf("lm = %i \n",lm);
+  for (i=0; i <= n-1; i++) {
+    cost = -0.99999 + i * dx;
+    P = sqrt(qp*qp*(1.-cost*cost)+pow((q-qp*cost),2));
+    x1= 1.0/(16.0*pow(P,5.0))*exp(-(Qm+P)/(2.0*Tv0))*Tv0*pow((Qm*Qm-P*P),2);
+    x2=P*P*(3.*P*P-2.*P*Tv0-4.*Tv0*Tv0)+Qp*Qp*(P*P+6.*P*Tv0+12.*Tv0*Tv0);
+   // printf("P_l = %E\n",P_l(cost,lm));
+   // printf("x1 = %E, x2 = %E, dx = %E, cost = %E, Int = %E, l = %i, p_l = %E, \n", x1,x2,double(dx),double(cost),double(integrand),int(lm), P_l(cost,lm));
+    integrand = fma(x1*x2*dx,P_l(cost,lm),integrand);
+  }
+  //printf("INTEGRAND = %E \n" ,integrand);
+  //printf("IN: q = %E, qp = %E, l=%i, tv0 = %E, KM = %E \n",  q,qp, lm, Tv0, integrand);
+  //printf("KM = %E \n", integrand);
+  return integrand;
+}
+
+
 int perturb_sources_at_tau(
                            struct perturbs * ppt,
                            int index_md,
@@ -2966,7 +3016,7 @@ int perturb_vector_init(
   int index_pt;
   int l;
   int n_ncdm,index_q,index_qp,ncdm_l_size;
-  double rho_plus_p_ncdm,q,q2,epsilon,a,factor;
+  double rho_plus_p_ncdm,q,q2,qp,epsilon,a,factor;
 
   /** - allocate a new perturb_vector structure to which ppw-->pv will point at the end of the routine */
 
@@ -6726,7 +6776,8 @@ int perturb_derivs(double tau,
   double * pvecmetric;
   double * s_l;
   struct perturb_vector * pv;
-  double T_v,T_v4,param; /*BEN FLAG*/
+  double T_v,T_v4,param,ksi,f0,f0p; /*BEN FLAG*/
+  double i1_ncdm, i2_ncdm, i3_ncdm, i4_ncdm, i5_ncdm, i6_ncdm, i7_ncdm;
   /* short-cut notations for the perturbations */
   double delta_g=0.,theta_g=0.,shear_g=0.;
   double delta_b,theta_b;
@@ -6749,8 +6800,8 @@ int perturb_derivs(double tau,
   double w,w_prime;
 
   /* for use with non-cold dark matter (ncdm): */
-  int index_q,n_ncdm,idx;
-  double q,epsilon,dlnf0_dlnq,qk_div_epsilon;
+  int index_q,index_qp,n_ncdm,idx;
+  double q,qp,epsilon,dlnf0_dlnq,qk_div_epsilon;
   double rho_ncdm_bg,p_ncdm_bg,pseudo_p_ncdm,w_ncdm,ca2_ncdm,ceff2_ncdm=0.,cvis2_ncdm=0.;
 
   /* for use with curvature */
@@ -7363,44 +7414,86 @@ int perturb_derivs(double tau,
       /** - ----> second case: use exact equation (Boltzmann hierarchy on momentum grid) */
 
      else {
-      param = pba->sig_ncdm;/*0.001;*/
+      param = pow(10,-4*6)*(pba->sig_ncdm)/pow(a,4);/*0.001;*/
+      //printf("a = %E\n", a);
         /** - -----> loop over species */
         /*printf("Loopin'\n");*/
         for (n_ncdm=0; n_ncdm<pv->N_ncdm; n_ncdm++) {
           T_v = pba->T_ncdm[n_ncdm]; /*stod(pba->T_ncdm);*/
+          ksi = pba->ksi_ncdm[n_ncdm];
           T_v4 = T_v*T_v*T_v*T_v;
           /** - -----> loop over momentum */
+          //printf(" q_size= %i, \n ", pv->q_size_ncdm[n_ncdm]); 
 
           for (index_q=0; index_q < pv->q_size_ncdm[n_ncdm]; index_q++) {
 
             /** - -----> define intermediate quantities */
             dlnf0_dlnq = pba->dlnf0_dlnq_ncdm[n_ncdm][index_q];
             q = pba->q_ncdm[n_ncdm][index_q];
+            ksi = pba->ksi_ncdm[n_ncdm];
+            f0 = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
             epsilon = sqrt(q*q+a2*pba->M_ncdm[n_ncdm]*pba->M_ncdm[n_ncdm]);
             qk_div_epsilon = k*q/epsilon;
-
+            /*printf(" q= %f, F0 = %f, a = %f, \n ", q, y[idx],a); */
             /** - -----> ncdm density for given momentum bin */
 
-            dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.
-              -40./3.*param*q*T_v4*y[idx]; /*BEN FLAG */
+            /** - -----> INTEGRAL 1 */
+            i1_ncdm = 0.;
+            for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
+              qp = pba->q_ncdm[n_ncdm][index_qp];
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              i1_ncdm += qp/q * (K_m_l(q,qp,pba, 0) - 20./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              //printf("q = %E, qp = %E, l=0, KM = %E \n",  q,qp, K_m_l(q,qp,pba, 0));
+            }
+            /** - */
 
+            dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.
+              -40./3.*param*q*T_v4*y[idx]
+              +param*i1_ncdm; /*BEN FLAG */
+
+            i2_ncdm = 0.;
+            for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
+              qp = pba->q_ncdm[n_ncdm][index_qp];
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              i2_ncdm += qp/q * (K_m_l(q,qp,pba, 1) + 10./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
+            }
             /** - -----> ncdm velocity for given momentum bin */
 
             dy[idx+1] = qk_div_epsilon/3.0*(y[idx] - 2*s_l[2]*y[idx+2])
               -epsilon*metric_euler/(3*q*k)*dlnf0_dlnq
-              -40./3.*param*q*T_v4*y[idx+1];
+              -40./3.*param*q*T_v4*y[idx+1]
+              +param*i2_ncdm; 
 
+
+            i3_ncdm = 0.;
+            for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
+              qp = pba->q_ncdm[n_ncdm][index_qp];
+              f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+              i2_ncdm += qp/q * (K_m_l(q,qp,pba, 2) - 2./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
+            }
             /** - -----> ncdm shear for given momentum bin */
 
             dy[idx+2] = qk_div_epsilon/5.0*(2*s_l[2]*y[idx+1]-3.*s_l[3]*y[idx+3])
               -s_l[2]*metric_shear*2./15.*dlnf0_dlnq
-              -40./3.*param*q*T_v4*y[idx+2];
+              -40./3.*param*q*T_v4*y[idx+2]
+              +param*i3_ncdm;
 
             /** - -----> ncdm l>3 for given momentum bin */
 
             for(l=3; l<pv->l_max_ncdm[n_ncdm]; l++){
+              i4_ncdm = 0.;
+              for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
+                qp = pba->q_ncdm[n_ncdm][index_qp];
+                f0p = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+                i4_ncdm += qp/q * (K_m_l(q,qp,pba, l))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
+              }
+
               dy[idx+l] = qk_div_epsilon/(2.*l+1.0)*(l*s_l[l]*y[idx+(l-1)]-(l+1.)*s_l[l+1]*y[idx+(l+1)])
-              -40./3.*param*q*T_v4*y[idx+l];
+              -40./3.*param*q*T_v4*y[idx+l]
+              +param*i4_ncdm;
             }
 
             /** - -----> ncdm lmax for given momentum bin (truncation as in Ma and Bertschinger)
@@ -8149,4 +8242,20 @@ int perturb_rsa_delta_and_theta(
 
   return _SUCCESS_;
 
+}
+
+double trap_int(double func(double), double a, double b, int n) {
+    double dx = (b - a) / (n - 1);   // Width of trapezoids
+
+    double func_x1 = func(a);
+    double accumulator = 0;
+    int i;
+    for (i=0; i <= n; i++) {
+        double x2 = a + i * dx;      // Avoid repeated floating-point addition
+        double func_x2 = func(x2);
+        accumulator = fma(func_x1 + func_x2, dx, accumulator); // Fused multiply-add
+        func_x1 = func_x2;
+    }
+
+    return 0.5 * accumulator;
 }

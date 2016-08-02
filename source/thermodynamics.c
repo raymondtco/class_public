@@ -712,6 +712,7 @@ int thermodynamics_init(
   pth->ds_rec=pth->rs_rec*pba->a_today/(1.+pth->z_rec);
   pth->da_rec=pvecback[pba->index_bg_ang_distance];
   pth->ra_rec=pth->da_rec*(1.+pth->z_rec)/pba->a_today;
+  printf("ra_rec = %f \n", pth->ra_rec);
   pth->angular_rescaling=pth->ra_rec/(pba->conformal_age-pth->tau_rec);
 
   /** - find damping scale at recombination (using linear interpolation) */

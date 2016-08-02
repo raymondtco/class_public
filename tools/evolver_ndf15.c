@@ -456,10 +456,10 @@ int evolver_ndf15(
 	    Jcurrent = _TRUE_;
 	  }
 	  else if (absh <= hmin){
-	    class_test(absh <= hmin, error_message,
-		       "Step size too small: step:%g, minimum:%g, in interval: [%g:%g]\n",
-		       absh,hmin,t0,tfinal);
-	  }
+	   class_test(absh <= hmin, error_message,
+		      "Step size too small: step:%g, minimum:%g, in interval: [%g:%g]\n",
+		     absh,hmin,t0,tfinal);
+	 }
 	  else{
 	    abshlast = absh;
 	    absh = MAX(0.3 * absh, hmin);
@@ -486,7 +486,7 @@ int evolver_ndf15(
       if (err>rtol){
 	/*Step failed */
 	stepstat[1]+= 1;
-	if (absh <= hmin){
+	if (absh <= hmin){ //BEN FLAG: I REMOVED THIS FOR NO GOOD REASON!/
 	  class_test(absh <= hmin, error_message,
 		     "Step size too small: step:%g, minimum:%g, in interval: [%g:%g]\n",
 		     absh,hmin,t0,tfinal);
