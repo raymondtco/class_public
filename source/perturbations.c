@@ -7433,7 +7433,7 @@ int perturb_derivs(double tau,
         /** - -----> loop over species */
         /*printf("Loopin'\n");*/
         for (n_ncdm=0; n_ncdm<pv->N_ncdm; n_ncdm++) {
-          T_v = pba->T_ncdm[n_ncdm]; /*stod(pba->T_ncdm);*/
+          T_v = pba->T_ncdm[n_ncdm]*2.725; /*stod(pba->T_ncdm);*/
           ksi = pba->ksi_ncdm[n_ncdm];
           T_v4 = T_v*T_v*T_v*T_v;
           /** - -----> loop over momentum */
@@ -7445,7 +7445,7 @@ int perturb_derivs(double tau,
             dlnf0_dlnq = pba->dlnf0_dlnq_ncdm[n_ncdm][index_q];
             q = pba->q_ncdm[n_ncdm][index_q];
             ksi = pba->ksi_ncdm[n_ncdm];
-            f0 = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+           // f0 = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
             epsilon = sqrt(q*q+a2*pba->M_ncdm[n_ncdm]*pba->M_ncdm[n_ncdm]);
             qk_div_epsilon = k*q/epsilon;
             /*printf(" q= %f, F0 = %f, a = %f, \n ", q, y[idx],a); */
@@ -7456,7 +7456,7 @@ int perturb_derivs(double tau,
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
               f0p = y[0+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i1_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][0] - 20./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              i1_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][0] - 20./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("q = %E, qp = %E, l=0, KM = %E \n",  q,qp, K_m_l(q,qp,pba, 0));
             }
             /** - */
@@ -7469,7 +7469,7 @@ int perturb_derivs(double tau,
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
               f0p = y[1+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][1] + 10./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][1] + 10./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
             /** - -----> ncdm velocity for given momentum bin */
@@ -7484,7 +7484,7 @@ int perturb_derivs(double tau,
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
               qp = pba->q_ncdm[n_ncdm][index_qp];
               f0p = y[2+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][2] - 2./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][2] - 2./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
             /** - -----> ncdm shear for given momentum bin */
@@ -7501,7 +7501,7 @@ int perturb_derivs(double tau,
               for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
                 qp = pba->q_ncdm[n_ncdm][index_qp];
                 f0p = y[l+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-                il_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][l])*f0p*(pba->q_ncdm[n_ncdm][index_qp]-pba->q_ncdm[n_ncdm][index_qp+1]);
+                il_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][l])*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
               }
 

@@ -87,7 +87,7 @@ int evolver_ndf15(
   double G[5]={1.0,3.0/2.0,11.0/6.0,25.0/12.0,137.0/60.0};
   double alpha[5]={-37.0/200,-1.0/9.0,-8.23e-2,-4.15e-2, 0};
   double invGa[5],erconst[5];
-  double abstol = 1e-15, eps=1e-16, threshold=abstol;
+  double abstol = 1e-18, eps=1e-19, threshold=abstol;
   int maxit=4, maxk=5;
 
   /* Logicals: */
@@ -243,7 +243,7 @@ int evolver_ndf15(
   stepstat[2] += nfenj;
   Jcurrent = _TRUE_; /* True */
 
-  hmin = 16.0*eps*fabs(t);
+  hmin = 1.e-20;//16.0*eps*fabs(t);
   /*Calculate initial step */
   rh = 0.0;
 
@@ -1186,7 +1186,7 @@ int numjac(
 	implementation in MATLAB, but a feature for recognising sparsity in the
 	jacobian and taking advantage of that has been added.
   */
-  double eps=1e-16, br=pow(eps,0.875),bl=pow(eps,0.75),bu=pow(eps,0.25);
+  double eps=1e-19, br=pow(eps,0.875),bl=pow(eps,0.75),bu=pow(eps,0.25);
   double facmin=pow(eps,0.78),facmax=0.1;
   int logjpos, pattern_broken;
   double tmpfac,difmax2=0.,del2,ffscale;
