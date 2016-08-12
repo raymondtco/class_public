@@ -27,13 +27,6 @@
 //@{
 
 
-  double P_l(double x,int lmax);
-
-  double K_m_l(
-                                double q,
-                                double qp,
-                                struct background * pba,
-                                int l);
   
 
 enum tca_flags {tca_on, tca_off};
@@ -110,7 +103,7 @@ struct perturbs
    *  'thermodynamics' structures) */
 
   //@{
-
+  double K_m_l_matrix[20][20][150];
   short has_perturbations; /**< do we need to compute perturbations at all ? */
 
   short has_cls; /**< do we need any harmonic space spectrum \f$ C_l \f$ (and hence Bessel functions, transfer functions, ...)? */
