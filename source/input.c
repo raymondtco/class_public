@@ -824,7 +824,8 @@ int input_read_parameters(
     class_read_list_of_doubles_or_default("omega_ncdm",pba->M_ncdm,0.0,N_ncdm);
 
     /* BEN FLAG: Interacting Neutrino Cross-section */
-    class_read_double("sig_ncdm",pba->sig_ncdm);
+    class_read_list_of_doubles_or_default("sig_ncdm",pba->sig_ncdm,0.0,N_ncdm);
+    //class_read_double("sig_ncdm",pba->sig_ncdm);
 
     /* Check for duplicate Omega/omega entries, missing mass definition and
        update pba->Omega0_ncdm:*/
@@ -2820,7 +2821,7 @@ int input_default_params(
   pba->deg_ncdm = NULL;
   pba->ncdm_psd_parameters = NULL;
   pba->ncdm_psd_files = NULL;
-  pba->sig_ncdm = 0.; /*BEN FLAG */
+  //pba->sig_ncdm = 0; /*BEN FLAG */
 
   pba->Omega0_scf = 0.; /* Scalar field defaults */
   pba->attractor_ic_scf = _TRUE_;

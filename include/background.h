@@ -102,7 +102,7 @@ struct background
 					     relative chemical potential
 					     ksi_ncdm1/T_ncdm1; and its
 					     default value */
-  double sig_ncdm;
+  double * sig_ncdm;
   double * ncdm_psd_parameters;         /**< list of parameters for specifying/modifying
                                              ncdm p.s.d.'s, to be customized for given model
                                              (could be e.g. mixing angles) */
