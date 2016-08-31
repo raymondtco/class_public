@@ -58,6 +58,7 @@
   return p[lmax];
 }
 
+
 double K_m_l(
                                 double q,
                                 double qp,
@@ -65,7 +66,7 @@ double K_m_l(
                                 ) {
   /* - define local variables */
   double Qp, Qm, P, k_m,x1,x2;
-  double Tv0 = 1.95; //1.34754*pow(10,25); 
+    double Tv0 = 1.95; //*1.34754*pow(10,25);
   double cost;
   int i;
   int n=100000;
@@ -184,18 +185,48 @@ int perturb_init(
   double tstart, tstop, tspent;
 #endif
 
+                /* RAY FLAG */
+    int index_q_max = pba->q_size_ncdm[pba->N_ncdm - 1];
+    int index_l_max = ppr->l_max_ncdm;
+    char kernel_file_name[100];
+    sprintf(kernel_file_name, "./collision_kernel/kerneltable_%d_%d.dat", index_q_max, index_l_max);
+    FILE *fp = fopen(kernel_file_name, "rb");
+    
+    if (fp) {
+        printf("%s opened.\n", kernel_file_name);
 
+        for(index_q = 0; index_q < pba->q_size_ncdm[pba->N_ncdm - 1]; index_q++){
+            for (index_qp = 0; index_qp < pba->q_size_ncdm[pba->N_ncdm - 1]; index_qp++) {
+                for (index_l = 0; index_l < ppr->l_max_ncdm ; index_l++) {
+                    double kernelElement;
+                    fscanf(fp, "%lf,", &kernelElement);
+                    ppt->K_m_l_matrix[index_q][index_qp][index_l] = kernelElement;
+                    //printf("K_m_l_matrix is %E \n", ppt->K_m_l_matrix[index_q][index_qp][index_l]);
+                }
+            }
+            printf("Finished reading interaction kernels (K_m_l):  %i / %i \n", index_q+1,pba->q_size_ncdm[pba->N_ncdm - 1]);
+        }
+        
+        
+    }
+    if (!fp) {
+        printf("%s created.\n", kernel_file_name);
+        fp = fopen(kernel_file_name, "ab+");
+    
        for(index_q = 0; index_q < pba->q_size_ncdm[pba->N_ncdm - 1]; index_q++){
             for (index_qp = 0; index_qp < pba->q_size_ncdm[pba->N_ncdm - 1]; index_qp++) {
                 for (index_l = 0; index_l < ppr->l_max_ncdm ; index_l++) {
-                    ppt->K_m_l_matrix[index_q][index_qp][index_l] = K_m_l(pba->q_ncdm[pba->N_ncdm - 1][index_q],pba->q_ncdm[pba->N_ncdm - 1][index_qp], index_l) ;
+                    double qToKelvin= 2*_PI_/13797.909625*7.42095*pow(10,-26); // q is in the units of 2pi/r_a(tau_rec) and 7.42095*pow(10,-26) converts 1/Mpc into Kelvin.
+                    ppt->K_m_l_matrix[index_q][index_qp][index_l] = K_m_l(qToKelvin*pba->q_ncdm[pba->N_ncdm - 1][index_q],qToKelvin*pba->q_ncdm[pba->N_ncdm - 1][index_qp], index_l) ;
                     //printf("q = %f and qp = %f and l=%i \n", pba->q_ncdm[pba->N_ncdm - 1][index_q], pba->q_ncdm[pba->N_ncdm - 1][index_qp],index_l);
                     //printf("K_m_l_matrix is %E \n", ppt->K_m_l_matrix[index_q][index_qp][index_l]);
+                    fprintf(fp, "%E, ", ppt->K_m_l_matrix[index_q][index_qp][index_l]);
                 }
             }
             printf("Finished precomputing interaction kernels (K_m_l):  %i / %i \n", index_q+1,pba->q_size_ncdm[pba->N_ncdm - 1]);
         }
-        
+    }
+    fclose(fp);
 
   /** - perform preliminary checks */
 
@@ -3029,7 +3060,9 @@ int perturb_vector_init(
   int index_pt;
   int l;
   int n_ncdm,index_q,index_qp,ncdm_l_size;
-  double rho_plus_p_ncdm,q,q2,qp,epsilon,a,factor;
+  double rho_plus_p_ncdm,q,q2,qp,epsilon,a,factor, q_K, qp_K;
+  double qToKelvin= 2*_PI_/13797.909625*7.42095*pow(10,-26); // q is in the units of 2pi/r_a(tau_rec) and 7.42095*pow(10,-26) converts 1/Mpc into Kelvin.
+
 
   /** - allocate a new perturb_vector structure to which ppw-->pv will point at the end of the routine */
 
@@ -6814,7 +6847,8 @@ int perturb_derivs(double tau,
 
   /* for use with non-cold dark matter (ncdm): */
   int index_q,index_qp,n_ncdm,idx;
-  double q,qp,epsilon,dlnf0_dlnq,qk_div_epsilon;
+  double q,qp,epsilon,dlnf0_dlnq,qk_div_epsilon, q_K, qp_K;
+  double qToKelvin= 2*_PI_/13797.909625*7.42095*pow(10,-26); // q is in the units of 2pi/r_a(tau_rec) and 7.42095*pow(10,-26) converts 1/Mpc into Kelvin.
   double rho_ncdm_bg,p_ncdm_bg,pseudo_p_ncdm,w_ncdm,ca2_ncdm,ceff2_ncdm=0.,cvis2_ncdm=0.;
 
   /* for use with curvature */
@@ -7427,7 +7461,7 @@ int perturb_derivs(double tau,
       /** - ----> second case: use exact equation (Boltzmann hierarchy on momentum grid) */
 
      else {
-      param = pow(10,-4*6)*(pba->sig_ncdm)/pow(a,4);/*0.001;*/
+         param = pow(10,-4*6)/pow(a,4);/*(pba->sig_ncdm);*/
 
       //printf("a = %E\n", a);
         /** - -----> loop over species */
@@ -7436,6 +7470,7 @@ int perturb_derivs(double tau,
           T_v = pba->T_ncdm[n_ncdm]*2.725; /*stod(pba->T_ncdm);*/
           ksi = pba->ksi_ncdm[n_ncdm];
           T_v4 = T_v*T_v*T_v*T_v;
+          double cplng_ncdm = pba->sig_ncdm[n_ncdm];
           /** - -----> loop over momentum */
           //printf(" q_size= %i, \n ", pv->q_size_ncdm[n_ncdm]); 
 
@@ -7454,60 +7489,64 @@ int perturb_derivs(double tau,
             /** - -----> INTEGRAL 1 */
             i1_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
-              qp = pba->q_ncdm[n_ncdm][index_qp];
+                q_K = q*qToKelvin;
+                qp_K = pba->q_ncdm[n_ncdm][index_qp]*qToKelvin;
               f0p = y[0+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i1_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][0] - 20./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
+              i1_ncdm += qp_K/q_K * (ppt->K_m_l_matrix[index_q][index_qp][0] - 20./9. *qp_K * qp_K *q_K*q_K* exp(-q_K/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("q = %E, qp = %E, l=0, KM = %E \n",  q,qp, K_m_l(q,qp,pba, 0));
             }
             /** - */
 
             dy[idx] = -qk_div_epsilon*y[idx+1]+metric_continuity*dlnf0_dlnq/3.
-              -40./3.*param*q*T_v4*y[idx]
-              +param*i1_ncdm; /*BEN FLAG */
+              -40./3.*param*cplng_ncdm*q*T_v4*y[idx]
+              +param*cplng_ncdm*i1_ncdm; /*BEN FLAG */
 
             i2_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
-              qp = pba->q_ncdm[n_ncdm][index_qp];
+                q_K = q*qToKelvin;
+                qp_K = pba->q_ncdm[n_ncdm][index_qp]*qToKelvin;
               f0p = y[1+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][1] + 10./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
+              i2_ncdm += qp_K/q_K * (ppt->K_m_l_matrix[index_q][index_qp][1] + 10./9. *qp_K * qp_K *q_K*q_K* exp(-q_K/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
             /** - -----> ncdm velocity for given momentum bin */
 
             dy[idx+1] = qk_div_epsilon/3.0*(y[idx] - 2*s_l[2]*y[idx+2])
               -epsilon*metric_euler/(3*q*k)*dlnf0_dlnq
-              -40./3.*param*q*T_v4*y[idx+1]
-              +param*i2_ncdm; 
+              -40./3.*param*cplng_ncdm*q*T_v4*y[idx+1]
+              +param*cplng_ncdm*i2_ncdm; 
 
 
             i3_ncdm = 0.;
             for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
-              qp = pba->q_ncdm[n_ncdm][index_qp];
+                q_K = q*qToKelvin;
+                qp_K = pba->q_ncdm[n_ncdm][index_qp]*qToKelvin;
               f0p = y[2+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][2] - 2./9. *qp * qp *q*q* exp(-q/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
+              i2_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][2] - 2./9. *qp_K * qp_K *q_K*q_K* exp(-q_K/T_v))*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
             }
             /** - -----> ncdm shear for given momentum bin */
 
             dy[idx+2] = qk_div_epsilon/5.0*(2*s_l[2]*y[idx+1]-3.*s_l[3]*y[idx+3])
               -s_l[2]*metric_shear*2./15.*dlnf0_dlnq
-              -40./3.*param*q*T_v4*y[idx+2]
-              +param*i3_ncdm;
+              -40./3.*param*cplng_ncdm*q*T_v4*y[idx+2]
+              +param*cplng_ncdm*i3_ncdm;
 
             /** - -----> ncdm l>3 for given momentum bin */
 
             for(l=3; l<pv->l_max_ncdm[n_ncdm]; l++){
               il_ncdm = 0.;
               for (index_qp=0; index_qp < pv->q_size_ncdm[n_ncdm]; index_qp++) {
-                qp = pba->q_ncdm[n_ncdm][index_qp];
+                  q_K = q*qToKelvin;
+                  qp_K = pba->q_ncdm[n_ncdm][index_qp]*qToKelvin;
                 f0p = y[l+index_qp*(pv->l_max_ncdm[n_ncdm]+1)];
-                il_ncdm += qp/q * (ppt->K_m_l_matrix[index_q][index_qp][l])*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
+                il_ncdm += qp_K/q_K * (ppt->K_m_l_matrix[index_q][index_qp][l])*f0p*(pba->q_ncdm[n_ncdm][index_qp+1]-pba->q_ncdm[n_ncdm][index_qp]);
               //printf("KM = %E \n",  K_m_l(q,qp,pba, 1));
               }
 
               dy[idx+l] = qk_div_epsilon/(2.*l+1.0)*(l*s_l[l]*y[idx+(l-1)]-(l+1.)*s_l[l+1]*y[idx+(l+1)])
-              -40./3.*param*q*T_v4*y[idx+l]
-              +param*il_ncdm;
+              -40./3.*param*cplng_ncdm*q*T_v4*y[idx+l]
+              +param*cplng_ncdm*il_ncdm;
             }
 
             /** - -----> ncdm lmax for given momentum bin (truncation as in Ma and Bertschinger)
